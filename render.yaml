@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: bookverse-api
+    env: node
+    plan: free
+    repo: https://github.com/ganymede323/bookverse
+    branch: main
+    buildCommand: "cd server && npm install"
+    startCommand: "cd server && node src/server.js"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+        # Must be provided manually in the Render dashboard for security
+      - key: JWT_SECRET
+        sync: false
+        # Must be provided manually in the Render dashboard for security
+      - key: CORS_ORIGIN
+        sync: false
+        # E.g., https://bookverse.vercel.app

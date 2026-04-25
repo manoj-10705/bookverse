@@ -3,13 +3,16 @@ import { body, validationResult } from 'express-validator';
 import Book from '../models/Book.js';
 import Review from '../models/Review.js';
 import auth from '../middleware/auth.js';
+import { validateObjectId, sanitizeRequests } from '../middleware/validate.js';
 
 const router = express.Router();
+router.use(sanitizeRequests);
 
 // Get all books with search and filter
 router.get('/', async (req, res) => {
   try {
-    const { search, genre, page = 1, limit = 20 } = req.query;
+    const { search, genre, page = 1 } = req.query;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     let query = {};
 
     // Search functionality
@@ -24,7 +27,7 @@ router.get('/', async (req, res) => {
 
     const books = await Book.find(query)
       .sort({ createdAt: -1 })
-      .limit(limit * 1)
+      .limit(limit)
       .skip((page - 1) * limit);
 
     const total = await Book.countDocuments(query);
@@ -41,7 +44,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single book
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateObjectId('id'), async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
     if (!book) {
@@ -78,7 +81,16 @@ router.post('/', auth, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const book = new Book(req.body);
+    const allowedFields = {
+      title: req.body.title,
+      author: req.body.author,
+      genre: req.body.genre,
+      description: req.body.description,
+      coverUrl: req.body.coverUrl,
+      isbn: req.body.isbn,
+      publishedYear: req.body.publishedYear
+    };
+    const book = new Book(allowedFields);
     await book.save();
     res.status(201).json(book);
   } catch (error) {

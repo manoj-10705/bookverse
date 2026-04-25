@@ -10,7 +10,9 @@ const router = express.Router();
 router.post('/register', [
   body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
   body('email').isEmail().withMessage('Please enter a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+    .matches(/[0-9]/).withMessage('Password must contain at least one number')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -33,8 +35,8 @@ router.post('/register', [
     // Generate token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
     );
 
     res.status(201).json({
@@ -79,8 +81,8 @@ router.post('/login', [
     // Generate token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
     );
 
     res.json({

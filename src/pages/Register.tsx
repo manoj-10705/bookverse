@@ -1,130 +1,148 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { BookOpen } from 'lucide-react';
 
 const Register: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  
   const navigate = useNavigate();
+  const { register } = useAuth();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+    
+    if (formData.password !== formData.confirmPassword) {
+      return setError('Passwords do not match');
     }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-
+    
     setLoading(true);
-
+    
     try {
-      await register(name, email, password);
+      await register(formData.name, formData.email, formData.password);
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      if (err.response?.data?.errors) {
+        setError(err.response.data.errors[0].msg);
+      } else {
+        setError(err.response?.data?.message || 'Failed to register');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-bold text-center mb-6">Join BookVerse</h2>
-        
+    <div className="flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 mt-10 animate-fade-in pb-20">
+      <div className="max-w-md w-full glass-card premium-shadow rounded-3xl p-8 border border-transparent dark:border-dark-border">
+        <div className="text-center mb-8">
+          <BookOpen className="mx-auto h-12 w-12 text-accent-primary" />
+          <h2 className="mt-6 text-3xl font-display font-bold text-gray-900 dark:text-white">
+            Create an account
+          </h2>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Already have an account?{' '}
+            <Link to="/login" className="font-medium text-accent-primary hover:text-accent-secondary transition-colors">
+              Sign in
+            </Link>
+          </p>
+        </div>
+
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl mb-6 shadow-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="name">
               Full Name
             </label>
             <input
-              type="text"
               id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              name="name"
+              type="text"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your full name"
+              value={formData.name}
+              onChange={handleChange}
+              className="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm dark:bg-dark-bg dark:text-white transition-all focus:ring-2"
+              placeholder="John Doe"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="email">
+              Email address
             </label>
             <input
-              type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              type="email"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              className="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm dark:bg-dark-bg dark:text-white transition-all focus:ring-2"
+              placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="password">
               Password
             </label>
             <input
-              type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              type="password"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your password"
+              minLength={8}
+              value={formData.password}
+              onChange={handleChange}
+              className="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm dark:bg-dark-bg dark:text-white transition-all focus:ring-2"
+              placeholder="Min. 8 chars, 1 uppercase, 1 number"
             />
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="confirmPassword">
               Confirm Password
             </label>
             <input
-              type="password"
               id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              name="confirmPassword"
+              type="password"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="appearance-none block w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm dark:bg-dark-bg dark:text-white transition-all focus:ring-2"
+              placeholder="••••••••"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full mt-2 flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gradient-to-r from-accent-primary to-accent-secondary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-primary disabled:opacity-50 transition-all premium-shadow tracking-wide"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
-
-        <p className="text-center mt-4 text-gray-600">
-          Already have an account?{' '}
-          <Link to="/login" className="text-blue-600 hover:text-blue-700">
-            Login here
-          </Link>
-        </p>
       </div>
     </div>
   );

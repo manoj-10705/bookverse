@@ -45,3 +45,9 @@ Thumbs.db
 # Temporary folders
 tmp/
 temp/
+
+# Datasets
+*.csv
+*.tsv
+datasets/
+data/

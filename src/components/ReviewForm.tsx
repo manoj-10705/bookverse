@@ -1,39 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import StarRating from './StarRating';
 
 interface ReviewFormProps {
   bookId: string;
-  onReviewSubmitted: () => void;
+  onReviewAdded: () => void;
 }
 
-const ReviewForm: React.FC<ReviewFormProps> = ({ bookId, onReviewSubmitted }) => {
+const ReviewForm: React.FC<ReviewFormProps> = ({ bookId, onReviewAdded }) => {
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [existingReview, setExistingReview] = useState<any>(null);
-
-  useEffect(() => {
-    checkExistingReview();
-  }, [bookId]);
-
-  const checkExistingReview = async () => {
-    try {
-      const response = await axios.get(`/api/reviews/book/${bookId}`);
-      const userReview = response.data.find((review: any) => 
-        review.userId._id === localStorage.getItem('userId')
-      );
-      
-      if (userReview) {
-        setExistingReview(userReview);
-        setRating(userReview.rating);
-        setReviewText(userReview.reviewText || '');
-      }
-    } catch (err) {
-      console.error('Error checking existing review:', err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +31,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ bookId, onReviewSubmitted }) =>
         reviewText: reviewText.trim() || undefined
       });
 
-      onReviewSubmitted();
-      
-      if (!existingReview) {
-        setRating(0);
-        setReviewText('');
-      }
+      onReviewAdded();
+      setRating(0);
+      setReviewText('');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to submit review');
     } finally {
@@ -69,50 +44,47 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ bookId, onReviewSubmitted }) =>
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl">
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Rating *
-        </label>
+        <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Your Rating
+        </p>
         <StarRating 
           rating={rating} 
-          onRatingChange={setRating}
-          size="lg"
+          onRatingChange={setRating} 
+          size="lg" 
         />
       </div>
 
       <div>
-        <label htmlFor="reviewText" className="block text-sm font-medium text-gray-700 mb-2">
-          Review (optional)
+        <label htmlFor="reviewText" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Your Review
         </label>
         <textarea
           id="reviewText"
           value={reviewText}
           onChange={(e) => setReviewText(e.target.value)}
           rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Share your thoughts about this book..."
           maxLength={2000}
+          className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-accent-primary focus:border-transparent dark:bg-dark-bg dark:text-white transition-all resize-none"
+          placeholder="Share your thoughts about this book..."
         />
-        <p className="text-xs text-gray-500 mt-1">
-          {reviewText.length}/2000 characters
-        </p>
+        <p className="text-xs text-gray-400 mt-1 text-right">{reviewText.length}/2000</p>
       </div>
 
-      <button
-        type="submit"
-        disabled={loading || rating === 0}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        {loading 
-          ? (existingReview ? 'Updating...' : 'Submitting...') 
-          : (existingReview ? 'Update Review' : 'Submit Review')
-        }
-      </button>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={loading || rating === 0}
+          className="px-6 py-2 bg-gradient-to-r from-accent-primary to-accent-secondary text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all premium-shadow font-medium"
+        >
+          {loading ? 'Submitting...' : 'Submit Review'}
+        </button>
+      </div>
     </form>
   );
 };

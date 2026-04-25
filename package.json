@@ -22,15 +22,22 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.3.2",
     "express-validator": "^7.2.1",
+    "framer-motion": "^12.38.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^1.8.0",
+    "mongodb": "^7.1.1",
     "mongoose": "^8.0.0",
+    "node-cron": "^4.2.1",
     "nodemon": "^3.1.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.9.4",
     "sonner": "^2.0.3",
-    "tailwind-merge": "^3.1.0"
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

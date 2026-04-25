@@ -15,15 +15,21 @@ router.get('/profile/:userId?', auth, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({
+    const profileResponse = {
       id: user._id,
       name: user.name,
-      email: user.email,
       displayName: user.displayName,
       bio: user.bio,
       favoriteGenres: user.favoriteGenres,
       totalReviews: user.totalReviews
-    });
+    };
+
+    // Only include email if user is requesting their own profile
+    if (req.user._id.toString() === userId.toString()) {
+      profileResponse.email = user.email;
+    }
+
+    res.json(profileResponse);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

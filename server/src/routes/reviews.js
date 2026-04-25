@@ -5,11 +5,12 @@ import Book from '../models/Book.js';
 import User from '../models/User.js';
 import auth from '../middleware/auth.js';
 import { updateBookRating } from './books.js';
+import { validateObjectId } from '../middleware/validate.js';
 
 const router = express.Router();
 
 // Get reviews for a book
-router.get('/book/:bookId', async (req, res) => {
+router.get('/book/:bookId', validateObjectId('bookId'), async (req, res) => {
   try {
     const reviews = await Review.find({ bookId: req.params.bookId })
       .populate('userId', 'name displayName')
@@ -50,7 +51,7 @@ router.get('/user/:userId?', auth, async (req, res) => {
 });
 
 // Get user's review for a specific book
-router.get('/book/:bookId/user', auth, async (req, res) => {
+router.get('/book/:bookId/user', auth, validateObjectId('bookId'), async (req, res) => {
   try {
     const review = await Review.findOne({
       bookId: req.params.bookId,
@@ -120,7 +121,7 @@ router.post('/', auth, [
 });
 
 // Delete review
-router.delete('/:reviewId', auth, async (req, res) => {
+router.delete('/:reviewId', auth, validateObjectId('reviewId'), async (req, res) => {
   try {
     const review = await Review.findById(req.params.reviewId);
     

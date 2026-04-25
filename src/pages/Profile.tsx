@@ -186,27 +186,52 @@ const Profile: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {reviews.map((review) => (
-              <div key={review._id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <Link 
-                      to={`/book/${review.bookId._id}`}
-                      className="text-lg font-medium text-gray-900 hover:text-blue-600"
-                    >
-                      {review.bookId.title}
-                    </Link>
-                    <p className="text-sm text-gray-600">by {review.bookId.author}</p>
-                  </div>
-                  <div className="text-right">
-                    <StarRating rating={review.rating} size="sm" readonly />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(review.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
+              <div key={review._id} className="flex flex-col md:flex-row bg-gray-50 dark:bg-dark-bg p-6 rounded-2xl border border-gray-100 dark:border-dark-border hover:shadow-md transition-shadow">
+                <div className="md:w-1/4 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
+                  <Link to={`/book/${review.bookId?._id}`}>
+                    <div className="aspect-[2/3] w-full max-w-[120px] bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden premium-shadow mx-auto md:mx-0">
+                      {review.bookId?.coverUrl ? (
+                         <img 
+                           src={review.bookId.coverUrl} 
+                           alt={review.bookId.title} 
+                           className="w-full h-full object-cover"
+                         />
+                      ) : (
+                         <div className="w-full h-full flex items-center justify-center text-gray-400">
+                           <Book className="h-8 w-8" />
+                         </div>
+                      )}
+                    </div>
+                  </Link>
                 </div>
-                {review.reviewText && (
-                  <p className="text-gray-700">{review.reviewText}</p>
-                )}
+                
+                <div className="flex-1">
+                  <Link to={`/book/${review.bookId?._id}`} className="block group">
+                    <h3 className="font-display font-bold text-xl text-gray-900 dark:text-white group-hover:text-accent-primary transition-colors mb-1">
+                      {review.bookId?.title || 'Unknown Book'}
+                    </h3>
+                  </Link>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    by {review.bookId?.author || 'Unknown Author'}
+                  </p>
+                  
+                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3 bg-white dark:bg-dark-surface w-fit px-3 py-1.5 rounded-lg border border-gray-100 dark:border-dark-border">
+                    <span className="flex mr-2">
+                       {Array(5).fill(0).map((_, i) => (
+                         <span key={i} className={i < review.rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}>
+                           ★
+                         </span>
+                       ))}
+                    </span>
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </div>
+                  
+                  {review.comment && (
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed bg-white dark:bg-dark-surface p-4 rounded-xl shadow-sm">
+                      {review.comment}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
           </div>

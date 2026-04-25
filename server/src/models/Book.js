@@ -23,6 +23,19 @@ const bookSchema = new mongoose.Schema({
   coverUrl: {
     type: String
   },
+  thumbnail: {
+    type: String
+  },
+  pageCount: {
+    type: Number
+  },
+  externalId: {
+    type: String
+  },
+  source: {
+    type: String,
+    default: 'local'
+  },
   isbn: {
     type: String,
     trim: true
