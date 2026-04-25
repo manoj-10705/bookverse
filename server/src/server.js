@@ -16,13 +16,27 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ✅ Define allowed origins
+const allowedOrigins = [
+  "https://bookverse-xi.vercel.app", // Your deployed frontend on Vercel
+  "http://localhost:5173"            // Local development (Vite)
+];
+
+// ✅ Configure CORS
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`❌ Blocked by CORS: ${origin}`);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173', 'http://localhost:5174'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-}));
 app.use(express.json({ limit: '10kb' }));
 
 // Rate limiting
