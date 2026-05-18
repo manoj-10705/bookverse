@@ -12,22 +12,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Define allowed origins
-const allowedOrigins = [
-  "https://bookverse-xi.vercel.app", // Your deployed frontend on Vercel
-  "http://localhost:5173"            // Local development (Vite)
-];
-
-// ✅ Configure CORS
+// Allow all origins for the production environment so we don't have to manually configure it
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`❌ Blocked by CORS: ${origin}`);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: true,
   credentials: true
 }));
 
@@ -41,7 +28,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/bookverse";
 
 mongoose.connect(MONGODB_URI)
   .then(() => {
@@ -53,7 +40,6 @@ mongoose.connect(MONGODB_URI)
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌐 Allowed Origins: ${allowedOrigins.join(', ')}`);
     });
   })
   .catch((err) => {
