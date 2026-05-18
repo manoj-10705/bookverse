@@ -1,91 +1,41 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import axios from 'axios';
 import Book from './models/Book.js';
 
 dotenv.config();
 
-const sampleBooks = [
-  {
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    genre: "Fiction",
-    description: "A classic American novel set in the Jazz Age, exploring themes of wealth, love, and the American Dream through the eyes of narrator Nick Carraway.",
-    coverUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop",
-    publishedYear: 1925,
-  },
-  {
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
-    genre: "Fiction",
-    description: "A gripping tale of racial injustice and childhood innocence in the American South, told through the eyes of Scout Finch.",
-    coverUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=400&fit=crop",
-    publishedYear: 1960,
-  },
-  {
-    title: "1984",
-    author: "George Orwell",
-    genre: "Science Fiction",
-    description: "A dystopian social science fiction novel about totalitarian control and the struggle for individual freedom in a surveillance state.",
-    coverUrl: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=300&h=400&fit=crop",
-    publishedYear: 1949,
-  },
-  {
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    genre: "Romance",
-    description: "A romantic novel that critiques the British landed gentry at the end of the 18th century, following Elizabeth Bennet and Mr. Darcy.",
-    coverUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=400&fit=crop",
-    publishedYear: 1813,
-  },
-  {
-    title: "The Catcher in the Rye",
-    author: "J.D. Salinger",
-    genre: "Fiction",
-    description: "A controversial coming-of-age story following teenager Holden Caulfield's experiences in New York City.",
-    coverUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=400&fit=crop",
-    publishedYear: 1951,
-  },
-  {
-    title: "Dune",
-    author: "Frank Herbert",
-    genre: "Science Fiction",
-    description: "An epic science fiction novel set in a distant future amidst a feudal interstellar society, focusing on politics, religion, and ecology.",
-    coverUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=400&fit=crop",
-    publishedYear: 1965,
-  },
-  {
-    title: "The Lord of the Rings",
-    author: "J.R.R. Tolkien",
-    genre: "Fantasy",
-    description: "An epic high fantasy novel following the quest to destroy the One Ring and defeat the Dark Lord Sauron.",
-    coverUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=400&fit=crop",
-    publishedYear: 1954,
-  },
-  {
-    title: "Harry Potter and the Philosopher's Stone",
-    author: "J.K. Rowling",
-    genre: "Fantasy",
-    description: "The first book in the beloved series about a young wizard discovering his magical heritage and attending Hogwarts School.",
-    coverUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=400&fit=crop",
-    publishedYear: 1997,
-  },
-  {
-    title: "The Hobbit",
-    author: "J.R.R. Tolkien",
-    genre: "Fantasy",
-    description: "A children's fantasy novel about Bilbo Baggins' unexpected journey with dwarves to reclaim their mountain home from a dragon.",
-    coverUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=400&fit=crop",
-    publishedYear: 1937,
-  },
-  {
-    title: "Sapiens: A Brief History of Humankind",
-    author: "Yuval Noah Harari",
-    genre: "Non-Fiction",
-    description: "A thought-provoking exploration of human history from the Stone Age to the present, examining how Homo sapiens came to dominate the world.",
-    coverUrl: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=300&h=400&fit=crop",
-    publishedYear: 2011,
+async function fetchBooksFromGoogleBooks() {
+  const query = 'subject:fiction';
+  const maxResults = 40;
+  // Note: Using the free tier without an API key might be rate-limited
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=${maxResults}`;
+
+  try {
+    const response = await axios.get(url);
+    if (!response.data.items) {
+      return [];
+    }
+
+    const books = response.data.items.map(item => {
+      const volumeInfo = item.volumeInfo;
+      return {
+        title: volumeInfo.title || 'Unknown Title',
+        author: volumeInfo.authors ? volumeInfo.authors.join(', ') : 'Unknown Author',
+        genre: volumeInfo.categories ? volumeInfo.categories[0] : 'Fiction',
+        description: volumeInfo.description || 'No description available.',
+        coverUrl: volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || null,
+        publishedYear: volumeInfo.publishedDate ? parseInt(volumeInfo.publishedDate.substring(0, 4)) : null,
+      };
+    });
+
+    // Filter out books with missing required fields
+    return books.filter(book => book.title && book.author && book.description);
+  } catch (error) {
+    console.error('Error fetching from Google Books:', error.message);
+    return [];
   }
-];
+}
 
 async function seedBooks() {
   try {
@@ -101,9 +51,34 @@ async function seedBooks() {
       process.exit(0);
     }
     
+    console.log('Fetching books from Google Books API...');
+    let fetchedBooks = await fetchBooksFromGoogleBooks();
+
+    if (fetchedBooks.length === 0) {
+      console.log('Failed to fetch books from API, using fallback data...');
+      fetchedBooks = [
+        {
+          title: "The Great Gatsby",
+          author: "F. Scott Fitzgerald",
+          genre: "Fiction",
+          description: "A classic American novel set in the Jazz Age, exploring themes of wealth, love, and the American Dream through the eyes of narrator Nick Carraway.",
+          coverUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop",
+          publishedYear: 1925,
+        },
+        {
+          title: "To Kill a Mockingbird",
+          author: "Harper Lee",
+          genre: "Fiction",
+          description: "A gripping tale of racial injustice and childhood innocence in the American South, told through the eyes of Scout Finch.",
+          coverUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=400&fit=crop",
+          publishedYear: 1960,
+        }
+      ];
+    }
+
     // Insert sample books
-    await Book.insertMany(sampleBooks);
-    console.log(`Seeded ${sampleBooks.length} books successfully`);
+    await Book.insertMany(fetchedBooks);
+    console.log(`Seeded ${fetchedBooks.length} books successfully`);
     
     process.exit(0);
   } catch (error) {
