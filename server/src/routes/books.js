@@ -6,6 +6,43 @@ import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Get top overall books
+router.get('/top', async (req, res) => {
+  try {
+    const books = await Book.find()
+      .sort({ averageRating: -1, totalReviews: -1 })
+      .limit(10);
+    res.json(books);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get recent books
+router.get('/recent', async (req, res) => {
+  try {
+    const books = await Book.find()
+      .sort({ createdAt: -1 })
+      .limit(10);
+    res.json(books);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all genres
+router.get('/meta/genres', async (req, res) => {
+  try {
+    const genres = await Book.distinct('genre');
+    res.json(genres.sort());
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get all books with search and filter
 router.get('/', async (req, res) => {
   try {
@@ -48,17 +85,6 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Book not found' });
     }
     res.json(book);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Get all genres
-router.get('/meta/genres', async (req, res) => {
-  try {
-    const genres = await Book.distinct('genre');
-    res.json(genres.sort());
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
